@@ -101,12 +101,33 @@ def read_configs(directory=CURRENT_DIRECTORY):
     return configs
 
 
+def write_to_configs(key: str, value, directory=CURRENT_DIRECTORY) -> dict:
+    """ Write a value into a key in the configs file. """
+    configs_file = os.path.join(directory, CONFIG_FILE)
+
+    if not os.path.isfile(configs_file):
+        create_default_configs(directory)
+
+    with open(configs_file) as file:
+        configs = json.load(file)
+
+    configs[key] = value
+    with open(os.path.join(directory, CONFIG_FILE), "w") as file:
+        json.dump(configs, file, indent=2, sort_keys=True)
+
+    return configs
+
+
 def create_default_configs(directory):
     """Create a default config file"""
     random_overlay = random.choice(get_overlays(directory))
     with open(os.path.join(directory, CONFIG_FILE), "w") as file:
         json.dump(
-            {ACTIVE_OVERLAY_KEY: random_overlay},
+            {
+                ACTIVE_OVERLAY_KEY: random_overlay,
+                "brightness": -1,
+                "contrast": -1,
+            },
             file,
             indent=2,
             sort_keys=True,

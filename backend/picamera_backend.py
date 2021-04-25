@@ -4,6 +4,7 @@ from typing import Dict
 
 from backend import Backend, PublishFunc
 from canvas import Canvas
+from config import read_configs
 
 # This check needs to be done here, as it's only place we use picamera.
 try:
@@ -18,9 +19,9 @@ PI_WINDOW_TOP_LEFT = (0, -20)
 
 
 class PiCameraOverlayLayer(Enum):
-    """ The `picamera` layers which each overlay canvas should be placed on.
+    """The `picamera` layers which each overlay canvas should be placed on.
 
-        Higher layer numbers are placed in front of lower ones. """
+    Higher layer numbers are placed in front of lower ones."""
 
     video_feed = 2
     base = 3
@@ -29,10 +30,10 @@ class PiCameraOverlayLayer(Enum):
 
 
 class PiCameraBackend(Backend):
-    """ Gets video and displays using the `picamera` library.
+    """Gets video and displays using the `picamera` library.
 
-        This backend will only work when the `picamera` library is available,
-        i.e. when running on a Raspberry Pi. """
+    This backend will only work when the `picamera` library is available,
+    i.e. when running on a Raspberry Pi."""
 
     def __init__(
         self,
@@ -57,6 +58,12 @@ class PiCameraBackend(Backend):
             )
 
         self.pi_camera = PiCamera(resolution=(self.width, self.height))
+
+        configs = read_configs()
+        if configs["brightness"] != -1:
+            self.pi_camera.brightness = configs["brightness"]
+        if configs["contrast"] != -1:
+            self.pi_camera.contrast = configs["contrast"]
 
         self.prev_overlays: Dict[
             PiCameraOverlayLayer, self.pi_camera.PiOverlayRenderer
@@ -107,8 +114,8 @@ class PiCameraBackend(Backend):
     def _on_canvases_updated(
         self, data_canvas: Canvas, message_canvas: Canvas
     ) -> None:
-        """ Picamera will retain the overlay images until updated, so we only need
-            to do this once per overlay update. """
+        """Picamera will retain the overlay images until updated, so we only need
+        to do this once per overlay update."""
         self.update_picamera_overlay(data_canvas, PiCameraOverlayLayer.data)
         self.update_picamera_overlay(
             message_canvas, PiCameraOverlayLayer.message
